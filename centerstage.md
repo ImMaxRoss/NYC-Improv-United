@@ -208,10 +208,27 @@ export const authAPI = {
 ```typescript
 import { api } from '../service';
 import { Lesson, LessonTemplate } from '../../types';
+import { MOCK_LESSONS, MOCK_TEMPLATES } from '../mockData';
 
 export const lessonsAPI = {
-  getUpcoming: (): Promise<Lesson[]> => api.get<Lesson[]>('/lessons/upcoming'),
-  getRecent: (limit: number = 10): Promise<Lesson[]> => api.get<Lesson[]>(`/lessons/recent?limit=${limit}`),
+  getUpcoming: async (): Promise<Lesson[]> => {
+    try {
+      return await api.get<Lesson[]>('/lessons/upcoming');
+    } catch (error) {
+      console.warn('Failed to fetch upcoming lessons, using mock data:', error);
+      return MOCK_LESSONS;
+    }
+  },
+  
+  getRecent: async (limit: number = 10): Promise<Lesson[]> => {
+    try {
+      return await api.get<Lesson[]>(`/lessons/recent?limit=${limit}`);
+    } catch (error) {
+      console.warn('Failed to fetch recent lessons, using mock data:', error);
+      return MOCK_LESSONS.slice(0, limit);
+    }
+  },
+  
   getById: (id: number): Promise<Lesson> => api.get<Lesson>(`/lessons/${id}`),
   create: (data: any): Promise<Lesson> => api.post<Lesson>('/lessons', data),
   update: (id: number, data: any): Promise<Lesson> => api.put<Lesson>(`/lessons/${id}`, data),
@@ -219,7 +236,15 @@ export const lessonsAPI = {
   addExercise: (lessonId: number, exerciseId: number, duration?: number): Promise<void> => 
     api.post<void>(`/lessons/${lessonId}/exercises?exerciseId=${exerciseId}${duration ? `&duration=${duration}` : ''}`),
   saveAsTemplate: (id: number): Promise<LessonTemplate> => api.post<LessonTemplate>(`/lessons/${id}/save-as-template`),
-  getTemplates: (): Promise<LessonTemplate[]> => api.get<LessonTemplate[]>('/lessons/templates'),
+  
+  getTemplates: async (): Promise<LessonTemplate[]> => {
+    try {
+      return await api.get<LessonTemplate[]>('/lessons/templates');
+    } catch (error) {
+      console.warn('Failed to fetch templates, using mock data:', error);
+      return MOCK_TEMPLATES;
+    }
+  },
 };
 ```
 
@@ -227,17 +252,48 @@ export const lessonsAPI = {
 ```typescript
 import { api } from '../service';
 import { Exercise } from '../../types';
+import { MOCK_EXERCISES } from '../mockData';
 
 export const exercisesAPI = {
-  search: (params: Record<string, any>): Promise<Exercise[]> => {
-    const queryString = new URLSearchParams(params).toString();
-    return api.get<Exercise[]>(`/exercises?${queryString}`);
+  search: async (params: Record<string, any>): Promise<Exercise[]> => {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      return await api.get<Exercise[]>(`/exercises?${queryString}`);
+    } catch (error) {
+      console.warn('Failed to search exercises, using mock data:', error);
+      return MOCK_EXERCISES;
+    }
   },
-  getPopular: (limit: number = 10): Promise<Exercise[]> => api.get<Exercise[]>(`/exercises/popular?limit=${limit}`),
+  
+  getPopular: async (limit: number = 10): Promise<Exercise[]> => {
+    try {
+      return await api.get<Exercise[]>(`/exercises/popular?limit=${limit}`);
+    } catch (error) {
+      console.warn('Failed to fetch popular exercises, using mock data:', error);
+      return MOCK_EXERCISES.slice(0, limit);
+    }
+  },
+  
   getById: (id: number): Promise<Exercise> => api.get<Exercise>(`/exercises/${id}`),
   create: (data: any): Promise<Exercise> => api.post<Exercise>('/exercises', data),
-  getForLessonPlanning: (): Promise<Exercise[]> => api.get<Exercise[]>('/exercises/lesson-planning'),
-  getCustom: (): Promise<Exercise[]> => api.get<Exercise[]>('/exercises/custom'),
+  
+  getForLessonPlanning: async (): Promise<Exercise[]> => {
+    try {
+      return await api.get<Exercise[]>('/exercises/lesson-planning');
+    } catch (error) {
+      console.warn('Failed to fetch lesson planning exercises, using mock data:', error);
+      return MOCK_EXERCISES;
+    }
+  },
+  
+  getCustom: async (): Promise<Exercise[]> => {
+    try {
+      return await api.get<Exercise[]>('/exercises/custom');
+    } catch (error) {
+      console.warn('Failed to fetch custom exercises, using mock data:', error);
+      return MOCK_EXERCISES.filter(e => e.createdByCoachName);
+    }
+  },
 };
 ```
 
@@ -1353,8 +1409,7 @@ class ApiService {
   }
 }
 
-export const api = new ApiService();
-```
+export const api = new ApiService();```
 
 ## Updated AuthContext.tsx
 ```typescript
@@ -1476,7 +1531,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 ### New File `src/api/mockData.ts`
 ```typescript
-// src/api/mockData.ts
 import { Lesson, Exercise, Team, LessonTemplate } from '../types';
 
 export const MOCK_LESSONS: Lesson[] = [
@@ -1568,49 +1622,9 @@ export const MOCK_TEMPLATES: LessonTemplate[] = [
   { id: 1, name: 'Basic Warmup Session' },
   { id: 2, name: 'Character Development Workshop' }
 ];
+```
 
-// src/api/modules/lessons.ts - Updated version
-import { api } from '../service';
-import { Lesson, LessonTemplate } from '../../types';
-import { MOCK_LESSONS, MOCK_TEMPLATES } from '../mockData';
-
-export const lessonsAPI = {
-  getUpcoming: async (): Promise<Lesson[]> => {
-    try {
-      return await api.get<Lesson[]>('/lessons/upcoming');
-    } catch (error) {
-      console.warn('Failed to fetch upcoming lessons, using mock data:', error);
-      return MOCK_LESSONS;
-    }
-  },
-  
-  getRecent: async (limit: number = 10): Promise<Lesson[]> => {
-    try {
-      return await api.get<Lesson[]>(`/lessons/recent?limit=${limit}`);
-    } catch (error) {
-      console.warn('Failed to fetch recent lessons, using mock data:', error);
-      return MOCK_LESSONS.slice(0, limit);
-    }
-  },
-  
-  getById: (id: number): Promise<Lesson> => api.get<Lesson>(`/lessons/${id}`),
-  create: (data: any): Promise<Lesson> => api.post<Lesson>('/lessons', data),
-  update: (id: number, data: any): Promise<Lesson> => api.put<Lesson>(`/lessons/${id}`, data),
-  delete: (id: number): Promise<void> => api.delete<void>(`/lessons/${id}`),
-  addExercise: (lessonId: number, exerciseId: number, duration?: number): Promise<void> => 
-    api.post<void>(`/lessons/${lessonId}/exercises?exerciseId=${exerciseId}${duration ? `&duration=${duration}` : ''}`),
-  saveAsTemplate: (id: number): Promise<LessonTemplate> => api.post<LessonTemplate>(`/lessons/${id}/save-as-template`),
-  
-  getTemplates: async (): Promise<LessonTemplate[]> => {
-    try {
-      return await api.get<LessonTemplate[]>('/lessons/templates');
-    } catch (error) {
-      console.warn('Failed to fetch templates, using mock data:', error);
-      return MOCK_TEMPLATES;
-    }
-  },
-};
-
+```ts
 // src/api/modules/exercises.ts - Updated version
 import { api } from '../service';
 import { Exercise } from '../../types';
@@ -1657,7 +1671,9 @@ export const exercisesAPI = {
     }
   },
 };
+```
 
+```ts
 // src/api/modules/teams.ts - Updated version
 import { api } from '../service';
 import { Team } from '../../types';
