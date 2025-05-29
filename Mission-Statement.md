@@ -1,1 +1,0 @@
-"NYC Improv United: Together, we empower our artistic community to elevate improv through relentless refinement and creative collaboration. We aim to produce performances of such exceptional quality and creativity that they captivate diverse audiences, and position NYC improv as a world-class theatrical destination worthy of our city's artistic legacy."
