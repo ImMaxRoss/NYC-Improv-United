@@ -61,12 +61,13 @@ export const Exercises: React.FC = () => {
     setRefreshTrigger(prev => prev + 1); // Trigger data refetch
   };
 
+
+
   // Filter and sort exercises
-  const filteredExercises = useMemo(() => {
-    if (!allExercises) return [];
-    
-    let filtered = allExercises.filter((exercise: ExerciseResponse) => {
-      // Search term
+const filteredExercises = useMemo(() => {
+  if (!allExercises) return [];
+  
+  let filtered = allExercises.filter((exercise: ExerciseResponse) => {      // Search term
       if (filters.searchTerm) {
         const searchLower = filters.searchTerm.toLowerCase();
         const matches = 
@@ -91,6 +92,12 @@ export const Exercises: React.FC = () => {
           filters.focusAreaIds!.includes(area.id)
         );
         if (!hasMatchingFocus) return false;
+      }
+      
+      // Evaluation template filter
+      if (filters.hasEvaluation !== undefined) {
+        if (filters.hasEvaluation && !exercise.hasDefaultEvaluationTemplate) return false;
+        if (!filters.hasEvaluation && exercise.hasDefaultEvaluationTemplate) return false;
       }
       
       return true;

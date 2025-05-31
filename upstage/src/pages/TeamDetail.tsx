@@ -8,7 +8,8 @@ import {
   BarChart3,
   Settings,
   Plus,
-  Play
+  Play,
+  Users
 } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
 import { PerformerCard } from '../components/Performers/PerformerCard';
@@ -88,7 +89,6 @@ export const TeamDetail: React.FC = () => {
   const convertToPerformer = (performer: PerformerSummary) => ({
     ...performer,
     email: undefined,
-    experienceLevel: performer.experienceLevel as 'Beginner' | 'Intermediate' | 'Advanced' | 'Professional',
     notes: undefined,
     createdAt: performer.createdAt || new Date().toISOString(),
     updatedAt: performer.updatedAt || new Date().toISOString()
@@ -135,7 +135,7 @@ export const TeamDetail: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatCard
-            icon={UserPlus}
+            icon={Users}
             label="Performers"
             value={team.performerCount}
             color="bg-blue-500 text-blue-500"
@@ -315,25 +315,19 @@ export const TeamDetail: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Experience Mix</span>
-                  <div className="text-right">
-                    {team.performers && team.performers.length > 0 ? (
-                      <div className="space-y-1">
-                        {['Beginner', 'Intermediate', 'Advanced', 'Professional'].map(level => {
-                          const count = team.performers!.filter((p: PerformerSummary) => p.experienceLevel === level).length;
-                          if (count === 0) return null;
-                          return (
-                            <div key={level} className="text-gray-100 text-sm">
-                              {count} {level}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-sm">No data</span>
-                    )}
-                  </div>
+                  <span className="text-gray-400">Total Performers</span>
+                  <span className="text-gray-100">
+                    {team.performerCount}
+                  </span>
                 </div>
+                {team.nextLessonDate && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Next Lesson</span>
+                    <span className="text-gray-100">
+                      {formatDate(team.nextLessonDate)}
+                    </span>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -345,7 +339,7 @@ export const TeamDetail: React.FC = () => {
         isOpen={showManagePerformers}
         onClose={() => setShowManagePerformers(false)}
         team={team}
-        onUpdate={refreshData} // Use refresh function instead of page reload
+        onUpdate={refreshData}
       />
     </div>
   );

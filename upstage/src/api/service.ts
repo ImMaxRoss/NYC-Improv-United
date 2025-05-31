@@ -1,5 +1,10 @@
-// Base API configuration
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+// src/api/service.ts
+
+import { API_BASE_URL } from "./config";
+
+// const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const BASE_URL = API_BASE_URL;
+const IS_DEVELOPMENT = process.env.REACT_APP_ENV === 'development';
 
 interface ApiRequestInit extends RequestInit {
   body?: any;
@@ -40,8 +45,11 @@ class ApiService {
         // Handle authentication errors
         if (response.status === 401) {
           sessionStorage.removeItem('token');
-          window.location.reload(); // Force re-authentication
-          throw new Error('Authentication failed');
+          // Only reload in production, in development we want to see the error
+          if (!IS_DEVELOPMENT) {
+            window.location.reload();
+          }
+          throw new Error('Authentication failed - please log in again');
         }
         
         // Try to get error message from response
@@ -67,6 +75,12 @@ class ApiService {
     } catch (error) {
       if (error instanceof Error) {
         console.error(`API Error [${options.method || 'GET'} ${url}]:`, error.message);
+        
+        // In development, show more detailed errors
+        if (IS_DEVELOPMENT) {
+          console.error('Full error details:', error);
+        }
+        
         throw error;
       }
       
@@ -117,6 +131,37 @@ class ApiService {
   // Method to clear auth token
   clearAuthToken(): void {
     sessionStorage.removeItem('token');
+  }
+
+  // Method to check if API is reachable
+  async healthCheck(): Promise<boolean> {
+    try {
+      // Try the dedicated health endpoint first
+      await this.get('/health');
+      return true;
+    } catch (error) {
+      try {
+        // Fallback to simple health endpoint
+        await this.get('/health/simple');
+        return true;
+      } catch (fallbackError) {
+        console.warn('API health check failed:', error);
+        return false;
+      }
+    }
+  }
+
+  // More detailed health check with information
+  async getHealthStatus(): Promise<{ healthy: boolean; data?: any; error?: string }> {
+    try {
+      const data = await this.get('/health');
+      return { healthy: true, data };
+    } catch (error) {
+      return { 
+        healthy: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
   }
 }
 

@@ -1,232 +1,335 @@
+// src/pages/LivePractice.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Play, 
-  Pause, 
-  Star,
-  CheckCircle,
-  ArrowLeft,
-  Users,
-  Target
-} from 'lucide-react';
-import { Navigation } from '../components/Navigation';
-import { Button } from '../components/ui/Button';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Play, ChevronRight, Save, AlertCircle } from 'lucide-react';
 import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { AttendanceSelector } from '../components/Performers/LivePractice/AttendanceSelector';
+import { ExerciseProgressBar } from '../components/Performers/LivePractice/ExerciseProgressBar';
+import { PracticeTimer } from '../components/Performers/LivePractice/PracticeTimer';
+import { QuickNotes } from '../components/Performers/LivePractice/QuickNotes';
+import { PracticeStats } from '../components/Performers/LivePractice/PracticeStats';
+import { SceneEvaluationModal } from '../components/Performers/LivePractice/SceneEvaluationModal';
+import { Lesson, PracticeSession, Performer, SceneEvaluation, PracticeStats as Stats } from '../types';
+import { lessonsAPI, practiceAPI, attendanceAPI, performersAPI } from '../api';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { useApi } from '../hooks/useApi';
-import { lessonsAPI } from '../api/modules/lessons';
-import { practiceAPI } from '../api/modules/practice';
-import { 
-  Lesson, 
-  PracticeSession, 
-  Performer, 
-  SceneEvaluation,
-  PracticeStats as Stats
-} from '../types';
+import { ErrorMessage } from '../components/ui/ErrorMessage';
 
 export const LivePractice: React.FC = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
   
-  // State management
-  const [practicePhase, setPracticePhase] = useState<'setup' | 'active' | 'complete'>('setup');
+  // State
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [session, setSession] = useState<PracticeSession | null>(null);
+  const [performers, setPerformers] = useState<Performer[]>([]);
+  const [attendeeIds, setAttendeeIds] = useState<number[]>([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [practiceSession, setPracticeSession] = useState<PracticeSession | null>(null);
-  const [selectedPerformers, setSelectedPerformers] = useState<number[]>([]);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [stats, setStats] = useState<Stats>({
+    totalDuration: 0,
+    exercisesCompleted: 0,
+    evaluationsCompleted: 0,
+    attendanceCount: 0
+  });
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
-  const [evaluations, setEvaluations] = useState<SceneEvaluation[]>([]);
-  const [practiceStartTime, setPracticeStartTime] = useState<number>(0);
-  const [sessionDuration, setSessionDuration] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // API calls
-  const { data: lesson, loading: lessonLoading } = useApi(
-    () => lessonsAPI.getById(parseInt(lessonId!)),
-    [lessonId]
-  );
-
-  // Mock performers - in real app, get from lesson.team
-  const mockPerformers: Performer[] = [
-    {
-      id: 1, firstName: 'Alice', lastName: 'Johnson', experienceLevel: 'Intermediate',
-      createdAt: '',
-      updatedAt: ''
-    },
-    {
-      id: 2, firstName: 'Bob', lastName: 'Smith', experienceLevel: 'Beginner',
-      createdAt: '',
-      updatedAt: ''
-    },
-    {
-      id: 3, firstName: 'Carol', lastName: 'Davis', experienceLevel: 'Advanced',
-      createdAt: '',
-      updatedAt: ''
-    },
-    {
-      id: 4, firstName: 'David', lastName: 'Wilson', experienceLevel: 'Intermediate',
-      createdAt: '',
-      updatedAt: ''
-    }
-  ];
-
-  // Calculate practice stats
-  const practiceStats: Stats = {
-    totalDuration: sessionDuration,
-    exercisesCompleted: currentExerciseIndex,
-    evaluationsCompleted: evaluations.length,
-    attendanceCount: selectedPerformers.length
-  };
-
-  // Timer effect for session duration
+  // Load lesson and performers
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (practicePhase === 'active') {
-      interval = setInterval(() => {
-        setSessionDuration(Math.floor((Date.now() - practiceStartTime) / 1000));
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
+    const loadData = async () => {
+      if (!lessonId) return;
+      
+      try {
+        setLoading(true);
+        const lessonData = await lessonsAPI.getById(parseInt(lessonId));
+        setLesson(lessonData);
+        
+        // Load performers if team-based lesson
+        if (lessonData.teamId) {
+          const performerData = await performersAPI.getMyPerformers();
+          setPerformers(performerData);
+        }
+      } catch (err) {
+        setError('Failed to load lesson data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [practicePhase, practiceStartTime]);
 
-  const handleStartPractice = async () => {
-    if (selectedPerformers.length === 0) {
-      alert('Please select at least one performer');
-      return;
-    }
+    loadData();
+  }, [lessonId]);
 
+  // Start practice session
+  const startPractice = async () => {
+    if (!lesson) return;
+    
     try {
-      const session = await practiceAPI.startPractice(parseInt(lessonId!), selectedPerformers);
-      setPracticeSession(session);
-      setPracticePhase('active');
-      setPracticeStartTime(Date.now());
-      setTimerRunning(true);
-    } catch (error) {
-      console.error('Failed to start practice:', error);
-      // Fallback: create mock session
-      const mockSession: PracticeSession = {
-        id: Date.now(),
-        lessonId: parseInt(lessonId!),
-        startTime: new Date().toISOString(),
-        currentExerciseIndex: 0,
-        presentPerformerIds: selectedPerformers
-      };
-      setPracticeSession(mockSession);
-      setPracticePhase('active');
-      setPracticeStartTime(Date.now());
-      setTimerRunning(true);
+      setSaving(true);
+      const newSession = await practiceAPI.startPractice(lesson.id);
+      setSession(newSession);
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        attendanceCount: attendeeIds.length
+      }));
+      
+      // Save initial attendance if any performers selected
+      if (attendeeIds.length > 0) {
+        await attendanceAPI.updateBulkAttendance(newSession.id, attendeeIds);
+      }
+    } catch (err) {
+      setError('Failed to start practice session');
+      console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleEndPractice = async () => {
-    if (practiceSession) {
+  // Update attendance
+  const handleAttendanceChange = async (selectedIds: number[]) => {
+    setAttendeeIds(selectedIds);
+    setStats(prev => ({ ...prev, attendanceCount: selectedIds.length }));
+    
+    // If session is active, update attendance in real-time
+    if (session) {
       try {
-        await practiceAPI.endPractice(practiceSession.id);
-      } catch (error) {
-        console.error('Failed to end practice:', error);
+        await attendanceAPI.updateBulkAttendance(session.id, selectedIds);
+      } catch (err) {
+        console.error('Failed to update attendance:', err);
       }
     }
-    setPracticePhase('complete');
-    setTimerRunning(false);
   };
 
-  const handleNextExercise = () => {
-    if (lesson && currentExerciseIndex < lesson.exercises!.length - 1) {
-      setCurrentExerciseIndex(currentExerciseIndex + 1);
-      setTimerRunning(false);
+  // Navigate between exercises
+  const goToExercise = async (index: number) => {
+    if (!session || !lesson?.exercises) return;
+    
+    const exercise = lesson.exercises[index];
+    if (!exercise) return;
+    
+    try {
+      const updatedSession = await practiceAPI.updateCurrentExercise(
+        session.id, 
+        exercise.id
+      );
+      setSession(updatedSession);
+      setCurrentExerciseIndex(index);
+      setIsTimerRunning(false);
+    } catch (err) {
+      console.error('Failed to update exercise:', err);
     }
   };
 
-  const handlePreviousExercise = () => {
-    if (currentExerciseIndex > 0) {
-      setCurrentExerciseIndex(currentExerciseIndex - 1);
-      setTimerRunning(false);
-    }
-  };
-
+  // Save evaluation
   const handleSaveEvaluation = async (evaluation: Omit<SceneEvaluation, 'id'>) => {
     try {
-      const savedEvaluation = await practiceAPI.createEvaluation(evaluation);
-      setEvaluations([...evaluations, savedEvaluation]);
-    } catch (error) {
-      console.error('Failed to save evaluation:', error);
-      // Fallback: add to local state
-      const mockEvaluation: SceneEvaluation = {
-        id: Date.now(),
-        ...evaluation
-      };
-      setEvaluations([...evaluations, mockEvaluation]);
+      await practiceAPI.createEvaluation(evaluation);
+      setStats(prev => ({
+        ...prev,
+        evaluationsCompleted: prev.evaluationsCompleted + 1
+      }));
+      setShowEvaluationModal(false);
+    } catch (err) {
+      console.error('Failed to save evaluation:', err);
     }
   };
 
-  if (lessonLoading) {
+  // Save notes
+  const handleSaveNote = async (note: string, type: 'exercise' | 'overall') => {
+    if (!lesson || !session) return;
+    
+    try {
+      await practiceAPI.savePracticeNotes(lesson.id, session.id, note, type);
+    } catch (err) {
+      console.error('Failed to save note:', err);
+    }
+  };
+
+  // End practice
+  const endPractice = async () => {
+    if (!session) return;
+    
+    try {
+      await practiceAPI.endPractice(session.id);
+      navigate(`/lessons/${lessonId}`);
+    } catch (err) {
+      console.error('Failed to end practice:', err);
+    }
+  };
+
+  // Timer callbacks
+  const handleTimerToggle = () => {
+    setIsTimerRunning(!isTimerRunning);
+  };
+
+  const handleTimerReset = () => {
+    setIsTimerRunning(false);
+  };
+
+  const handleTimeUp = () => {
+    // Could auto-advance or show notification
+  };
+
+  // Update total duration every second
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (session && isTimerRunning) {
+      interval = setInterval(() => {
+        setStats(prev => ({
+          ...prev,
+          totalDuration: prev.totalDuration + 1
+        }));
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [session, isTimerRunning]);
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900">
-        <Navigation />
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner />
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  if (!lesson) {
+  if (error || !lesson) {
     return (
-      <div className="min-h-screen bg-gray-900">
-        <Navigation />
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-100 mb-4">Lesson Not Found</h1>
-            <Button onClick={() => navigate('/dashboard')}>
-              Return to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ErrorMessage error={error || 'Lesson not found'} />
     );
   }
 
   const currentExercise = lesson.exercises?.[currentExerciseIndex];
-  const presentPerformers = mockPerformers.filter(p => selectedPerformers.includes(p.id));
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <Navigation />
-      
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-100">
-                {lesson.name || `${lesson.teamName} Practice`}
-              </h1>
-              <p className="text-gray-400">
-                {practicePhase === 'setup' && 'Prepare for practice'}
-                {practicePhase === 'active' && 'Practice in session'}
-                {practicePhase === 'complete' && 'Practice completed'}
-              </p>
-            </div>
-          </div>
-          
-          {practicePhase === 'active' && (
-            <Button variant="secondary" onClick={handleEndPractice}>
-              End Practice
-            </Button>
-          )}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-100">{lesson.name}</h1>
+          <p className="text-gray-400 mt-1">
+            {lesson.teamName ? `${lesson.teamName} • ` : ''}
+            {new Date(lesson.scheduledDate).toLocaleDateString()}
+          </p>
         </div>
+        {session && (
+          <Button onClick={endPractice} variant="secondary">
+            End Practice
+          </Button>
+        )}
       </div>
-    </div>
 
+      {!session ? (
+        // Pre-practice setup
+        <div className="space-y-6">
+          {performers.length > 0 && (
+            <AttendanceSelector
+              performers={performers}
+              selectedIds={attendeeIds}
+              onSelectionChange={handleAttendanceChange}
+            />
+          )}
+          
+          <Card className="p-6 text-center">
+            <h2 className="text-xl font-bold text-gray-100 mb-4">
+              Ready to start practice?
+            </h2>
+            <p className="text-gray-300 mb-6">
+              {lesson.exercises?.length || 0} exercises • 
+              {lesson.formattedDuration || '0 minutes'}
+            </p>
+            <Button onClick={startPractice} size="lg" loading={saving}>
+              <Play className="h-5 w-5 mr-2" />
+              Start Practice
+            </Button>
+          </Card>
+        </div>
+      ) : (
+        // Active practice session
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left column - Exercise progress */}
+          <div className="lg:col-span-1 space-y-6">
+            <ExerciseProgressBar
+              exercises={lesson.exercises || []}
+              currentIndex={currentExerciseIndex}
+              onExerciseClick={goToExercise}
+            />
+            <QuickNotes onSaveNote={handleSaveNote} />
+          </div>
+
+          {/* Center column - Current exercise */}
+          <div className="lg:col-span-1 space-y-6">
+            {currentExercise && (
+              <Card className="p-6">
+                <h2 className="text-2xl font-bold text-gray-100 mb-4">
+                  {currentExercise.exerciseName}
+                </h2>
+                <p className="text-gray-300 mb-6 whitespace-pre-wrap">
+                  {currentExercise.exerciseDescription}
+                </p>
+                
+                <div className="space-y-3">
+                  <Button 
+                    onClick={() => setShowEvaluationModal(true)}
+                    className="w-full"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Evaluate Scene
+                  </Button>
+                  
+                  {currentExerciseIndex < (lesson.exercises?.length || 0) - 1 && (
+                    <Button
+                      onClick={() => goToExercise(currentExerciseIndex + 1)}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      <ChevronRight className="h-4 w-4 mr-2" />
+                      Next Exercise
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )}
+            
+            <PracticeTimer
+              plannedDuration={currentExercise?.plannedDurationMinutes || 5}
+              onTimeUp={handleTimeUp}
+              isRunning={isTimerRunning}
+              onToggle={handleTimerToggle}
+              onReset={handleTimerReset}
+            />
+          </div>
+
+          {/* Right column - Stats */}
+          <div className="lg:col-span-1">
+            <PracticeStats
+              stats={stats}
+              currentExercise={currentExerciseIndex + 1}
+              totalExercises={lesson.exercises?.length || 0}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Evaluation Modal */}
+      {showEvaluationModal && currentExercise && (
+        <SceneEvaluationModal
+          isOpen={showEvaluationModal}
+          onClose={() => setShowEvaluationModal(false)}
+          onSave={handleSaveEvaluation}
+          performers={performers.filter(p => attendeeIds.includes(p.id))}
+          lessonExerciseId={currentExercise.id}
+          practiceSessionId={session?.id}
+          evaluationTemplateId={currentExercise.evaluationTemplateId}
+          evaluationTemplateName={currentExercise.evaluationTemplateName}
+        />
+      )}
+    </div>
   );
 };

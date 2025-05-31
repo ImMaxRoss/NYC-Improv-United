@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, Calendar, MoreVertical, Edit, Trash2, UserPlus } from 'lucide-react';
 import { Team } from '../../types';
 import { Card } from '../ui/Card';
@@ -19,6 +19,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   onManagePerformers,
   onViewDetails
 }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const formatDate = (dateString?: string): string => {
     if (!dateString) return 'No upcoming lessons';
     const date = new Date(dateString);
@@ -42,11 +44,52 @@ export const TeamCard: React.FC<TeamCardProps> = ({
           )}
         </div>
         
-        {/* Actions dropdown would go here */}
+        {/* Actions dropdown */}
         <div className="relative">
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowDropdown(!showDropdown)}
+          >
             <MoreVertical className="h-4 w-4" />
           </Button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 top-8 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-10 min-w-[150px]">
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  onEdit && onEdit(team);
+                }}
+                className="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-700 flex items-center space-x-2"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit Team</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  onManagePerformers && onManagePerformers(team);
+                }}
+                className="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-700 flex items-center space-x-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Manage Performers</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  if (window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
+                    onDelete && onDelete(team.id);
+                  }
+                }}
+                className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-700 flex items-center space-x-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete Team</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -91,27 +134,19 @@ export const TeamCard: React.FC<TeamCardProps> = ({
           variant="secondary"
           size="sm"
           onClick={() => onManagePerformers && onManagePerformers(team)}
+          title="Manage Performers"
         >
           <UserPlus className="h-4 w-4" />
         </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit && onEdit(team)}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete && onDelete(team.id)}
-          className="text-red-400 hover:text-red-300"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
       </div>
+
+      {/* Click outside to close dropdown */}
+      {showDropdown && (
+        <div 
+          className="fixed inset-0 z-0" 
+          onClick={() => setShowDropdown(false)}
+        />
+      )}
     </Card>
   );
 };

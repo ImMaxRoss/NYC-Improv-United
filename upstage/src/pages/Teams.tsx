@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add useNavigate
-import { Plus, Search, Users, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Search, Users, UserPlus, Edit } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
 import { TeamCard } from '../components/Teams/TeamCard';
 import { CreateTeamModal } from '../components/Teams/CreateTeamModal';
@@ -12,11 +12,14 @@ import { teamsAPI } from '../api/modules/teams';
 import { Team, TeamCreateRequest } from '../types';
 
 export const Teams: React.FC = () => {
-  const navigate = useNavigate(); // Add navigation hook
+  const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [creating, setCreating] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add refresh trigger
+  const [updating, setUpdating] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { data: teams, loading, error } = useApi(() => teamsAPI.getMyTeams(), [refreshTrigger]);
 
@@ -26,7 +29,7 @@ export const Teams: React.FC = () => {
   ) || [];
 
   const refreshData = () => {
-    setRefreshTrigger(prev => prev + 1); // Trigger data refetch
+    setRefreshTrigger(prev => prev + 1);
   };
 
   const handleCreateTeam = async (teamData: TeamCreateRequest) => {
@@ -34,7 +37,7 @@ export const Teams: React.FC = () => {
     try {
       await teamsAPI.createTeam(teamData);
       setShowCreateModal(false);
-      refreshData(); // Refresh data instead of page reload
+      refreshData();
     } catch (error) {
       console.error('Failed to create team:', error);
       alert('Failed to create team. Please try again.');
@@ -43,24 +46,45 @@ export const Teams: React.FC = () => {
     }
   };
 
+  const handleEditTeam = async (teamData: TeamCreateRequest) => {
+    if (!editingTeam) return;
+    
+    setUpdating(true);
+    try {
+      await teamsAPI.updateTeam(editingTeam.id, teamData);
+      setShowEditModal(false);
+      setEditingTeam(null);
+      refreshData();
+    } catch (error) {
+      console.error('Failed to update team:', error);
+      alert('Failed to update team. Please try again.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleDeleteTeam = async (teamId: number) => {
-    if (window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
-      try {
-        await teamsAPI.deleteTeam(teamId);
-        refreshData(); // Refresh data instead of page reload
-      } catch (error) {
-        console.error('Failed to delete team:', error);
-        alert('Failed to delete team. Please try again.');
-      }
+    try {
+      await teamsAPI.deleteTeam(teamId);
+      refreshData();
+    } catch (error) {
+      console.error('Failed to delete team:', error);
+      alert('Failed to delete team. Please try again.');
     }
   };
 
   const handleManagePerformers = (team: Team) => {
-    navigate(`/teams/${team.id}/manage`); // Use navigate instead of window.location.href
+    // Navigate to team detail page where performers can be managed
+    navigate(`/teams/${team.id}`);
+  };
+
+  const handleEditTeamClick = (team: Team) => {
+    setEditingTeam(team);
+    setShowEditModal(true);
   };
 
   const handleViewDetails = (team: Team) => {
-    navigate(`/teams/${team.id}`); // Use navigate instead of window.location.href
+    navigate(`/teams/${team.id}`);
   };
 
   return (
@@ -130,10 +154,10 @@ export const Teams: React.FC = () => {
               <TeamCard
                 key={team.id}
                 team={team}
-                onEdit={(team) => console.log('Edit team:', team)}
+                onEdit={handleEditTeamClick}
                 onDelete={handleDeleteTeam}
                 onManagePerformers={handleManagePerformers}
-                onViewDetails={handleViewDetails} // Use navigate function
+                onViewDetails={handleViewDetails}
               />
             ))}
           </div>
@@ -172,6 +196,24 @@ export const Teams: React.FC = () => {
         onSave={handleCreateTeam}
         loading={creating}
       />
+
+      {/* Edit Team Modal */}
+      {editingTeam && (
+        <CreateTeamModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingTeam(null);
+          }}
+          onSave={handleEditTeam}
+          loading={updating}
+          initialData={{
+            name: editingTeam.name,
+            description: editingTeam.description || ''
+          }}
+          title="Edit Team"
+        />
+      )}
     </div>
   );
 };

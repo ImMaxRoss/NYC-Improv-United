@@ -9,6 +9,7 @@ import { Performers } from './pages/Performers';
 import { Exercises } from './pages/Exercises';
 import { LessonPlanner } from './pages/LessonPlanner';
 import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
 const App: React.FC = () => {
@@ -23,7 +24,15 @@ const App: React.FC = () => {
   }
   
   if (!user) {
-    return <Login />;
+    return (
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+    );
   }
 
   return (
@@ -37,7 +46,9 @@ const App: React.FC = () => {
         <Route path="/performers" element={<Performers />} />
         <Route path="/exercises" element={<Exercises />} />
         <Route path="/lesson-planner" element={<LessonPlanner />} />
-        <Route path="/pages" element={<Navigate to="/pages" replace />} />
+        {/* Redirect auth routes to dashboard for authenticated users */}
+        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/register" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>

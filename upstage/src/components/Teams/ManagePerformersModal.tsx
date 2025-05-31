@@ -82,8 +82,9 @@ export const ManagePerformersModal: React.FC<ManagePerformersModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-700">
+      <div className="bg-gray-800 rounded-xl w-full max-w-6xl h-[90vh] flex flex-col">
+        {/* Header - Fixed */}
+        <div className="flex-shrink-0 p-6 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-gray-100">Manage Team Performers</h2>
@@ -95,27 +96,30 @@ export const ManagePerformersModal: React.FC<ManagePerformersModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6">
+        {/* Content - Scrollable */}
+        <div className="flex-1 p-6 overflow-hidden flex flex-col">
           {/* Search and Add */}
-          <div className="flex space-x-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search performers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-yellow-500"
-              />
+          <div className="flex-shrink-0 mb-6">
+            <div className="flex space-x-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search performers..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add New
+              </Button>
             </div>
-            <Button onClick={() => setShowCreateModal(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add New
-            </Button>
           </div>
 
           {/* Selection Summary */}
-          <div className="bg-gray-700 rounded-lg p-4 mb-6">
+          <div className="flex-shrink-0 bg-gray-700 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-gray-100">
@@ -150,8 +154,8 @@ export const ManagePerformersModal: React.FC<ManagePerformersModalProps> = ({
             </div>
           </div>
 
-          {/* Performers List */}
-          <div className="max-h-96 overflow-y-auto">
+          {/* Performers List - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
             {loading ? (
               <LoadingSpinner />
             ) : filteredPerformers.length === 0 ? (
@@ -169,7 +173,7 @@ export const ManagePerformersModal: React.FC<ManagePerformersModalProps> = ({
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
                 {filteredPerformers.map((performer) => (
                   <PerformerCard
                     key={performer.id}
@@ -184,7 +188,8 @@ export const ManagePerformersModal: React.FC<ManagePerformersModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-700">
+        {/* Footer - Fixed */}
+        <div className="flex-shrink-0 p-6 border-t border-gray-700 bg-gray-800">
           <div className="flex justify-end space-x-3">
             <Button variant="ghost" onClick={onClose} disabled={saving}>
               Cancel

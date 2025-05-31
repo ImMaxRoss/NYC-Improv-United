@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { ApiHealthCheck } from '../components/ApiHealthCheck';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -37,6 +39,9 @@ export const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
+        {/* API Health Check */}
+        <ApiHealthCheck />
+        
         {/* Logo */}
         <div className="text-center">
           <div className="text-6xl mb-4">🎭</div>
@@ -114,6 +119,23 @@ export const Login: React.FC = () => {
               )}
             </Button>
 
+            {/* Registration Link */}
+            <div className="text-center">
+              <p className="text-gray-400 text-sm mb-4">
+                Don't have an account?
+              </p>
+              <Link to="/register">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Create Account
+                </Button>
+              </Link>
+            </div>
+
             {/* Development Helper */}
             <div className="border-t border-gray-700 pt-4">
               <p className="text-gray-400 text-sm text-center mb-3">
@@ -121,7 +143,7 @@ export const Login: React.FC = () => {
               </p>
               <Button
                 type="button"
-                variant="secondary"
+                variant="ghost"
                 size="sm"
                 onClick={fillTestCredentials}
                 className="w-full"
@@ -133,6 +155,24 @@ export const Login: React.FC = () => {
               </p>
             </div>
           </form>
+        </Card>
+
+        {/* Additional Registration Option */}
+        <Card className="p-6 bg-gradient-to-r from-yellow-500 to-orange-500 bg-opacity-10 border-yellow-500 border-opacity-30">
+          <div className="text-center">
+            <div className="text-3xl mb-3">🌟</div>
+            <h3 className="text-lg font-bold text-yellow-300 mb-2">New to ImprovCoach?</h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Join thousands of improv coaches using our platform to organize lessons, 
+              track progress, and build better comedy.
+            </p>
+            <Link to="/register">
+              <Button variant="secondary" className="w-full bg-yellow-500 bg-opacity-20 border-yellow-500 text-yellow-300 hover:bg-yellow-500 hover:bg-opacity-30">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
         </Card>
 
         {/* Footer */}

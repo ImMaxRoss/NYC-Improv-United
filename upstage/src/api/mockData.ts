@@ -10,14 +10,13 @@ import {
   TimeBreakdown
 } from '../types';
 
-// Mock Performers with detailed information
+// Mock Performers with detailed information (experienceLevel removed)
 export const MOCK_PERFORMERS: Performer[] = [
   {
     id: 1,
     firstName: 'Alice',
     lastName: 'Johnson',
     email: 'alice.johnson@email.com',
-    experienceLevel: 'Intermediate',
     notes: 'Great at character work, working on saying yes to bigger emotions',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-20T15:30:00Z'
@@ -27,7 +26,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Bob',
     lastName: 'Smith',
     email: 'bob.smith@email.com',
-    experienceLevel: 'Beginner',
     notes: 'New to improv but very enthusiastic. Focus on listening skills.',
     createdAt: '2024-02-01T09:00:00Z',
     updatedAt: '2024-02-01T09:00:00Z'
@@ -37,7 +35,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Carol',
     lastName: 'Davis',
     email: 'carol.davis@email.com',
-    experienceLevel: 'Advanced',
     notes: 'Excellent game player, natural teacher, helps newer students',
     createdAt: '2023-11-20T14:00:00Z',
     updatedAt: '2024-01-10T12:00:00Z'
@@ -47,7 +44,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'David',
     lastName: 'Wilson',
     email: 'david.wilson@email.com',
-    experienceLevel: 'Intermediate',
     notes: 'Strong scene work, needs to work on supporting scenes vs leading',
     createdAt: '2024-01-05T11:00:00Z',
     updatedAt: '2024-01-25T16:45:00Z'
@@ -57,7 +53,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Emma',
     lastName: 'Brown',
     email: 'emma.brown@email.com',
-    experienceLevel: 'Advanced',
     notes: 'Exceptional physicality and commitment, great scene partner',
     createdAt: '2023-10-15T13:00:00Z',
     updatedAt: '2024-01-08T10:15:00Z'
@@ -67,7 +62,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Frank',
     lastName: 'Miller',
     email: 'frank.miller@email.com',
-    experienceLevel: 'Beginner',
     notes: 'Quiet but makes strong choices when he commits. Building confidence.',
     createdAt: '2024-02-10T16:00:00Z',
     updatedAt: '2024-02-10T16:00:00Z'
@@ -77,7 +71,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Grace',
     lastName: 'Lee',
     email: 'grace.lee@email.com',
-    experienceLevel: 'Intermediate',
     notes: 'Natural comedian with great timing. Working on more grounded scenes.',
     createdAt: '2023-12-01T12:00:00Z',
     updatedAt: '2024-01-15T14:20:00Z'
@@ -87,7 +80,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Henry',
     lastName: 'Garcia',
     email: 'henry.garcia@email.com',
-    experienceLevel: 'Professional',
     notes: 'Professional performer, great mentor figure for the team',
     createdAt: '2023-09-01T10:00:00Z',
     updatedAt: '2023-12-20T11:30:00Z'
@@ -97,7 +89,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Ivy',
     lastName: 'Chen',
     email: 'ivy.chen@email.com',
-    experienceLevel: 'Intermediate',
     notes: 'Excellent at relationship establishment, working on heightening',
     createdAt: '2024-01-20T15:00:00Z',
     updatedAt: '2024-02-05T09:45:00Z'
@@ -107,7 +98,6 @@ export const MOCK_PERFORMERS: Performer[] = [
     firstName: 'Jack',
     lastName: 'Taylor',
     email: 'jack.taylor@email.com',
-    experienceLevel: 'Beginner',
     notes: 'Very analytical, learning to trust instincts over thinking',
     createdAt: '2024-02-15T13:30:00Z',
     updatedAt: '2024-02-15T13:30:00Z'
@@ -119,7 +109,8 @@ const toPerformerSummary = (performer: Performer): PerformerSummary => ({
   id: performer.id,
   firstName: performer.firstName,
   lastName: performer.lastName,
-  experienceLevel: performer.experienceLevel
+  createdAt: performer.createdAt,
+  updatedAt: performer.updatedAt
 });
 
 // Mock Teams with performer associations

@@ -11,6 +11,9 @@ interface RegisterData {
   lastName: string;
   email: string;
   password: string;
+  bio?: string;
+  experience?: string;
+  certifications?: string;
 }
 
 interface RegisterResponse {
@@ -18,6 +21,7 @@ interface RegisterResponse {
   email: string;
   firstName: string;
   lastName: string;
+  coachId?: number;
 }
 
 interface AuthResponse {
@@ -62,7 +66,27 @@ export const authAPI = {
   // Register new user
   register: async (userData: RegisterData): Promise<RegisterResponse> => {
     try {
-      const response = await api.post<RegisterResponse>('/auth/register', userData);
+      console.log('Attempting registration with data:', {
+        ...userData,
+        password: '[REDACTED]'
+      });
+      
+      // Format data to match backend expectations (Coach object)
+      const coachData = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        bio: userData.bio || null,
+        experience: userData.experience || null,
+        certifications: userData.certifications || null
+      };
+      
+      const response = await api.post<RegisterResponse>('/auth/register', coachData);
+      console.log('Registration successful:', {
+        ...response,
+        token: response.token ? '[RECEIVED]' : '[MISSING]'
+      });
       
       // Store the token if registration successful
       if (response.token) {
@@ -71,7 +95,21 @@ export const authAPI = {
       
       return response;
     } catch (error) {
-      console.error('Register API error:', error);
+      console.error('Registration API error:', error);
+      
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('409') || error.message.toLowerCase().includes('conflict')) {
+          throw new Error('An account with this email already exists. Please use a different email or try logging in.');
+        }
+        if (error.message.includes('400') || error.message.toLowerCase().includes('bad request')) {
+          throw new Error('Please check your information and try again. Make sure all required fields are filled out correctly.');
+        }
+        if (error.message.includes('500') || error.message.toLowerCase().includes('internal server')) {
+          throw new Error('Server error occurred. Please try again in a few moments.');
+        }
+      }
+      
       throw error;
     }
   },

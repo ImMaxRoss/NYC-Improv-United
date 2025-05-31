@@ -10,7 +10,8 @@ import {
   Copy,
   MoreVertical,
   Bookmark,
-  BookmarkCheck
+  BookmarkCheck,
+  FileText
 } from 'lucide-react';
 import { ExerciseDetailed } from '../../types';
 import { Card } from '../ui/Card';
@@ -112,6 +113,14 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
           <span className="px-2 py-1 bg-purple-500 bg-opacity-20 text-purple-300 text-xs rounded border border-purple-500 border-opacity-30">
             {getGroupSizeIcon(exercise.groupSize)} {exercise.groupSize || 'Any Size'}
           </span>
+          
+          {/* Add this block for evaluation template indicator */}
+          {exercise.hasDefaultEvaluationTemplate && (
+            <span className="px-2 py-1 bg-green-500 bg-opacity-20 text-green-300 text-xs rounded flex items-center border border-green-500 border-opacity-30">
+              <FileText className="h-3 w-3 mr-1" />
+              Evaluation
+            </span>
+          )}
           
           {exercise.usageCount > 0 && (
             <span className="px-2 py-1 bg-gray-500 bg-opacity-20 text-gray-300 text-xs rounded border border-gray-500 border-opacity-30">

@@ -17,6 +17,8 @@ interface SceneEvaluationModalProps {
   performers: Performer[];
   lessonExerciseId: number;
   practiceSessionId?: number;
+  evaluationTemplateId?: number;
+  evaluationTemplateName?: string;
 }
 
 export const SceneEvaluationModal: React.FC<SceneEvaluationModalProps> = ({

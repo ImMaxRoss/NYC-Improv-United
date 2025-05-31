@@ -1,83 +1,60 @@
 // src/api/modules/practice.ts
 import { api } from '../service';
-import { PracticeSession, SceneEvaluation } from '../../types';
+import { PracticeNoteResponse, PracticeSession, SceneEvaluation } from '../../types';
+import { shouldUseMockFallback } from '../config';
 
 export const practiceAPI = {
-  // Start a practice session
-  startPractice: async (lessonId: number, performerIds: number[]): Promise<PracticeSession> => {
+  startPractice: async (lessonId: number): Promise<PracticeSession> => {
     try {
-      return await api.post<PracticeSession>('/practice/start', {
-        lessonId,
-        performerIds
+      return await api.post<PracticeSession>('/practice/sessions', {
+        lessonId
       });
     } catch (error) {
-      console.warn('Failed to start practice session, using mock data:', error);
-      // Return mock data for development
-      return {
-        id: Date.now(),
-        lessonId,
-        startTime: new Date().toISOString(),
-        currentExerciseIndex: 0,
-        presentPerformerIds: performerIds
-      };
+      console.error('Failed to start practice session:', error);
+      throw error;
     }
   },
 
-  // End a practice session
-  endPractice: async (sessionId: number): Promise<void> => {
+  endPractice: async (sessionId: number): Promise<PracticeSession> => {
     try {
-      await api.post<void>(`/practice/${sessionId}/end`);
+      return await api.put<PracticeSession>(`/practice/sessions/${sessionId}/end`);
     } catch (error) {
-      console.warn('Failed to end practice session:', error);
-      // Continue gracefully for development
+      console.error(`Failed to end practice session ${sessionId}:`, error);
+      throw error;
     }
   },
 
-  // Update current exercise
-  updateCurrentExercise: async (sessionId: number, exerciseIndex: number): Promise<void> => {
+  updateCurrentExercise: async (sessionId: number, exerciseId: number): Promise<PracticeSession> => {
     try {
-      await api.put<void>(`/practice/${sessionId}/current-exercise`, {
-        exerciseIndex
+      return await api.put<PracticeSession>(`/practice/sessions/${sessionId}/exercise`, {
+        exerciseId
       });
     } catch (error) {
-      console.warn('Failed to update current exercise:', error);
+      console.error(`Failed to update current exercise for session ${sessionId}:`, error);
+      throw error;
     }
   },
 
-  // Create evaluation
   createEvaluation: async (evaluation: Omit<SceneEvaluation, 'id'>): Promise<SceneEvaluation> => {
     try {
       return await api.post<SceneEvaluation>('/practice/evaluations', evaluation);
     } catch (error) {
-      console.warn('Failed to create evaluation, using mock data:', error);
-      // Return mock data for development
-      return {
-        id: Date.now(),
-        ...evaluation
-      };
+      console.error('Failed to create evaluation:', error);
+      throw error;
     }
   },
 
-  // Update attendance
-  updateAttendance: async (sessionId: number, performerIds: number[]): Promise<void> => {
+  savePracticeNotes: async (lessonId: number, sessionId: number, notes: string, noteType: string = 'general'): Promise<PracticeNoteResponse> => {
     try {
-      await api.put<void>(`/practice/${sessionId}/attendance`, {
-        performerIds
-      });
-    } catch (error) {
-      console.warn('Failed to update attendance:', error);
-    }
-  },
-
-  // Save practice notes
-  savePracticeNotes: async (sessionId: number, notes: string, noteType: string = 'general'): Promise<void> => {
-    try {
-      await api.post<void>(`/practice/${sessionId}/notes`, {
+      return await api.post<PracticeNoteResponse>('/practice/notes', {
+        lessonId,
+        sessionId,
         content: notes,
         noteType
       });
     } catch (error) {
-      console.warn('Failed to save practice notes:', error);
+      console.error(`Failed to save practice notes:`, error);
+      throw error;
     }
   }
 };

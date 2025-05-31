@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, X, Clock, Users } from 'lucide-react';
+import { Search, Filter, X, Clock, Users, FileText } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { ExerciseFilter, FocusArea } from '../../types';
@@ -39,7 +39,8 @@ export const ExerciseFilters: React.FC<ExerciseFiltersProps> = ({
       filters.groupSize ||
       filters.maxDuration ||
       filters.minDuration ||
-      (filters.source && filters.source !== 'all')
+      (filters.source && filters.source !== 'all') ||
+      filters.hasEvaluation !== undefined
     );
   };
 
@@ -192,6 +193,47 @@ export const ExerciseFilters: React.FC<ExerciseFiltersProps> = ({
                 <span className="text-gray-100 truncate">{area.name}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Evaluation Template Filter */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-3">
+            Evaluation Template
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                checked={filters.hasEvaluation === undefined}
+                onChange={() => updateFilter('hasEvaluation', undefined)}
+                className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600"
+              />
+              <span className="text-gray-100">All Exercises</span>
+            </label>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                checked={filters.hasEvaluation === true}
+                onChange={() => updateFilter('hasEvaluation', true)}
+                className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600"
+              />
+              <span className="text-gray-100 flex items-center">
+                <FileText className="h-4 w-4 mr-2 text-green-500" />
+                With Evaluation Template
+              </span>
+            </label>
+            
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="radio"
+                checked={filters.hasEvaluation === false}
+                onChange={() => updateFilter('hasEvaluation', false)}
+                className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600"
+              />
+              <span className="text-gray-100">Without Evaluation Template</span>
+            </label>
           </div>
         </div>
 

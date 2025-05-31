@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { X, Save, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Save, Plus, Trash2, FileText, Settings } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
-import { ExerciseCreateRequest, FocusArea } from '../../types';
+import { ExerciseCreateRequest, FocusArea, EvaluationCriterion, EvaluationCriterionRequest } from '../../types';
+import { evaluationsAPI } from '../../api/modules/evaluations';
 
 interface CreateExerciseModalProps {
   isOpen: boolean;
@@ -37,6 +38,13 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
   const [newMaterial, setNewMaterial] = useState('');
   const [newVariation, setNewVariation] = useState('');
   const [newTip, setNewTip] = useState('');
+  
+  // New states for evaluation template
+  const [includeEvaluation, setIncludeEvaluation] = useState(false);
+  const [evaluationTemplateName, setEvaluationTemplateName] = useState('');
+  const [useDefaultCriteria, setUseDefaultCriteria] = useState(true);
+  const [customCriteria, setCustomCriteria] = useState<EvaluationCriterionRequest[]>([]);
+  const [defaultCriteria, setDefaultCriteria] = useState<EvaluationCriterion[]>([]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -61,9 +69,39 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Load default criteria when component mounts
+  useEffect(() => {
+    if (isOpen && includeEvaluation) {
+      loadDefaultCriteria();
+    }
+  }, [isOpen, includeEvaluation]);
+
+  const loadDefaultCriteria = async () => {
+    try {
+      const criteria = await evaluationsAPI.getDefaultCriteria();
+      setDefaultCriteria(criteria);
+    } catch (error) {
+      console.error('Failed to load default criteria:', error);
+    }
+  };
+
   const handleSubmit = () => {
     if (validateForm()) {
-      onSave(formData);
+      const exerciseData: ExerciseCreateRequest = {
+        ...formData,
+        ...(includeEvaluation && {
+          evaluationTemplateName: evaluationTemplateName || `${formData.name} Evaluation`,
+          evaluationCriteria: useDefaultCriteria 
+            ? defaultCriteria.map(c => ({
+                name: c.name,
+                description: c.description,
+                maxScore: c.maxScore
+              }))
+            : customCriteria
+        })
+      };
+      
+      onSave(exerciseData);
       resetForm();
     }
   };
@@ -86,6 +124,10 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
     setNewMaterial('');
     setNewVariation('');
     setNewTip('');
+    setIncludeEvaluation(false);
+    setEvaluationTemplateName('');
+    setUseDefaultCriteria(true);
+    setCustomCriteria([]);
   };
 
   const handleChange = (field: keyof ExerciseCreateRequest, value: any) => {
@@ -390,6 +432,96 @@ export const CreateExerciseModal: React.FC<CreateExerciseModalProps> = ({
                 </div>
               </label>
             </div>
+          </Card>
+
+          {/* Evaluation Template Section */}
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium text-gray-100">Evaluation Template</h3>
+              <FileText className="h-4 w-4 text-gray-400" />
+            </div>
+            
+            <label className="flex items-center space-x-3 cursor-pointer mb-4">
+              <input
+                type="checkbox"
+                checked={includeEvaluation}
+                onChange={(e) => setIncludeEvaluation(e.target.checked)}
+                className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500"
+              />
+              <div>
+                <div className="text-gray-100 font-medium">Include default evaluation template</div>
+                <div className="text-gray-400 text-sm">
+                  Attach a standardized evaluation form to this exercise
+                </div>
+              </div>
+            </label>
+
+            {includeEvaluation && (
+              <div className="space-y-4 mt-4 pt-4 border-t border-gray-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Template Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={evaluationTemplateName}
+                    onChange={(e) => setEvaluationTemplateName(e.target.value)}
+                    placeholder={`${formData.name || 'Exercise'} Evaluation`}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-yellow-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Evaluation Criteria
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={useDefaultCriteria}
+                        onChange={() => setUseDefaultCriteria(true)}
+                        className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600"
+                      />
+                      <span className="text-gray-100">Use standard improv criteria (recommended)</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={!useDefaultCriteria}
+                        onChange={() => setUseDefaultCriteria(false)}
+                        className="w-4 h-4 text-yellow-500 bg-gray-700 border-gray-600"
+                      />
+                      <span className="text-gray-100">Create custom criteria</span>
+                    </label>
+                  </div>
+                </div>
+
+                {useDefaultCriteria && defaultCriteria.length > 0 && (
+                  <div className="bg-gray-700 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-300 mb-3">Standard Criteria:</h4>
+                    <div className="space-y-2">
+                      {defaultCriteria.map((criterion, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm">
+                          <span className="text-gray-100">{criterion.name}</span>
+                          <span className="text-gray-400">{criterion.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!useDefaultCriteria && (
+                  <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-3">
+                    <p className="text-blue-200 text-sm">
+                      <strong>Note:</strong> Custom criteria creation will be available in a future update. 
+                      For now, the standard criteria will be used.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
         </div>
 

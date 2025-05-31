@@ -1,3 +1,21 @@
+// Attendance Types
+export interface AttendanceRequest {
+  performerId: number;
+  isPresent: boolean;
+}
+
+export interface BulkAttendanceRequest {
+  performerIds: number[];
+}
+
+export interface AttendanceResponse {
+  practiceSessionId: number;
+  performerId: number;
+  performerFirstName: string;
+  performerLastName: string;
+}
+
+
 export interface User {
   id: number;
   firstName: string;
@@ -125,6 +143,7 @@ export interface LessonTemplate {
   exercises?: LessonExercise[];
   exerciseCount?: number;
   template?: boolean;
+  description?: string; 
 }
 
 export interface ApiResponse<T> {
@@ -141,8 +160,7 @@ export interface PerformerSummary {
   id: number;
   firstName: string;
   lastName: string;
-  experienceLevel: string;
-  // Added missing fields for compatibility
+  // Removed experienceLevel
   createdAt?: string;
   updatedAt?: string;
 }
@@ -152,7 +170,7 @@ export interface Performer {
   firstName: string;
   lastName: string;
   email?: string;
-  experienceLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Professional';
+  // Removed experienceLevel
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -187,7 +205,7 @@ export interface PerformerCreateRequest {
   firstName: string;
   lastName: string;
   email?: string;
-  experienceLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Professional';
+  // Removed experienceLevel
   notes?: string;
 }
 
@@ -222,29 +240,43 @@ export const BASE_REALITY_CRITERIA: EvaluationCriterion[] = [
   { id: 'listening', name: 'Listening', description: 'Active attention and responsiveness', maxScore: 4 },
   { id: 'commitment', name: 'Commitment', description: 'Full engagement and follow-through', maxScore: 4 },
   { id: 'avoidance_of_denial', name: 'Avoidance of Denial', description: 'Accepting reality vs blocking', maxScore: 4 },
-  { id: 'efficiency', name: 'Efficiency', description: 'Economic scene work', maxScore: 4 }
+  { id: 'efficiency', name: 'Efficiency/Clarity', description: 'Economic scene work', maxScore: 4 }
 ];
 
 // Game of Scene Rubric (Advanced)
 export const GAME_OF_SCENE_CRITERIA: EvaluationCriterion[] = [
-  { id: 'identification', name: 'Game Identification', description: 'Noticing the unusual thing', maxScore: 4 },
-  { id: 'resting', name: 'Resting the Game', description: 'Patiently establishing game', maxScore: 4 },
-  { id: 'heightening', name: 'Heightening', description: 'Escalating the game appropriately', maxScore: 4 },
-  { id: 'exploration', name: 'Exploration', description: 'Exploring the game fully', maxScore: 4 },
-  { id: 'top_of_intelligence', name: 'Top of Intelligence', description: 'Smart reactions to absurdity', maxScore: 4 },
-  { id: 'justification', name: 'Justification', description: 'Making absurdity believable', maxScore: 4 },
-  { id: 'framing', name: 'Framing', description: 'Communicating unusual behaviors clearly', maxScore: 4 },
-  { id: 'labeling', name: 'Labeling', description: 'Concisely summarizing game for teammates', maxScore: 4 },
-  { id: 'emotional_truth', name: 'Emotional Truth', description: 'Genuine reactions within the game', maxScore: 4 }
+  { id: 'identification', name: 'Game Identification', description: 'Spot & frame first unusual thing clearly', maxScore: 4 },
+  { id: 'building', name: 'Building Pattern', description: 'Solid, focused pattern established', maxScore: 4 },
+  { id: 'heightening', name: 'Heightening', description: 'Logical escalation within pattern', maxScore: 4 },
+  { id: 'exploration', name: 'Exploration', description: 'Believable "why?", smart logic', maxScore: 4 },
+  { id: 'topOfIntelligence', name: 'Top of Intelligence', description: 'Realistic, emotionally honest reactions', maxScore: 4 },
+  { id: 'teamwork', name: 'Agreement/Teamwork', description: 'Players support, don\'t sandbag/steamroll', maxScore: 4 },
+  { id: 'gameListening', name: 'Listening During Game', description: 'Moves connect, no pattern jumping', maxScore: 4 },
+  { id: 'clarity', name: 'Clarity of Game', description: 'One clear game, no crazy town', maxScore: 4 },
+  { id: 'believability', name: 'Commitment/Believability', description: 'No winking/commentary, full buy-in', maxScore: 4 }
 ];
 
 export interface PracticeSession {
   id: number;
   lessonId: number;
+  lessonName?: string;
   startTime: string;
   endTime?: string;
   currentExerciseIndex: number;
-  presentPerformerIds: number[];
+  currentExerciseId?: number; 
+  currentExerciseName?: string;
+  attendeeIds: number[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PracticeNoteResponse {
+  id: number;
+  lessonId: number;
+  practiceSessionId?: number;
+  noteType: string;
+  content: string;
+  createdAt: string;
 }
 
 export interface EvaluationCriterion {
@@ -269,6 +301,24 @@ export interface PracticeStats {
   exercisesCompleted: number;
   evaluationsCompleted: number;
   attendanceCount: number;
+}
+
+export interface EvaluationTemplate {
+  id: number;
+  name: string;
+  criteria: EvaluationCriterion[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EvaluationTemplateDTO {
+  id: number;
+  name: string;
+  criteria: {
+    name: string;
+    description: string;
+    maxScore: number;
+  }[];
 }
 
 export interface ExerciseRequest {
@@ -334,6 +384,21 @@ export interface EvaluationRequest {
   notes?: string;
 }
 
+export interface EvaluationUpdateRequest {
+  teamId?: number;
+  performanceDate?: string;
+  performerNames?: string;
+  yesAnd?: number;
+  agreement?: number;
+  whoWhatWhere?: number;
+  physicality?: number;
+  listening?: number;
+  commitment?: number;
+  avoidanceOfDenial?: number;
+  efficiency?: number;
+  notes?: string;
+}
+
 export interface EvaluationResponse {
   id: number;
   teamId: number;
@@ -361,6 +426,7 @@ export interface ExerciseFilter {
   source?: 'all' | 'public' | 'custom' | 'favorites';
   sortBy?: 'name' | 'popularity' | 'duration' | 'created' | 'updated';
   sortDirection?: 'ASC' | 'DESC';
+  hasEvaluation?: boolean;
 }
 
 export interface PerformerProgress {

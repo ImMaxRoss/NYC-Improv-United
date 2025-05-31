@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Plus } from 'lucide-react';
+import { Clock, Plus, FileText } from 'lucide-react';
 import { Exercise } from '../types';
 import { Card } from './ui/Card';
 
@@ -28,9 +28,17 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, onC
             <Clock className="h-4 w-4 mr-1" />
             {exercise.formattedMinimumDuration || `${exercise.minimumDurationMinutes} min`}
           </div>
+          {exercise.hasDefaultEvaluationTemplate && (
+            <div className="flex items-center text-green-400 text-sm" title={exercise.defaultEvaluationTemplateName}>
+              <FileText className="h-4 w-4" />
+            </div>
+          )}
           {onAdd && (
             <button
-              onClick={() => onAdd(exercise)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(exercise);
+              }}
               className="text-yellow-500 hover:text-yellow-400"
             >
               <Plus className="h-5 w-5" />
@@ -51,6 +59,14 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, onC
           </span>
         ))}
       </div>
+      {exercise.hasDefaultEvaluationTemplate && (
+        <div className="mt-3 pt-3 border-t border-gray-700">
+          <p className="text-green-400 text-xs flex items-center">
+            <FileText className="h-3 w-3 mr-1" />
+            Includes evaluation template
+          </p>
+        </div>
+      )}
       {exercise.createdByCoachName && (
         <p className="text-gray-500 text-xs mt-3">Created by {exercise.createdByCoachName}</p>
       )}

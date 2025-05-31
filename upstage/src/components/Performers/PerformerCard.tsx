@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Award, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { User, Mail, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { Performer } from '../../types';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -21,16 +21,6 @@ export const PerformerCard: React.FC<PerformerCardProps> = ({
   selected = false,
   selectable = false
 }) => {
-  const getExperienceBadgeColor = (level: string): string => {
-    switch (level) {
-      case 'Beginner': return 'bg-green-500 bg-opacity-20 text-green-300';
-      case 'Intermediate': return 'bg-yellow-500 bg-opacity-20 text-yellow-300';
-      case 'Advanced': return 'bg-orange-500 bg-opacity-20 text-orange-300';
-      case 'Professional': return 'bg-purple-500 bg-opacity-20 text-purple-300';
-      default: return 'bg-gray-500 bg-opacity-20 text-gray-300';
-    }
-  };
-
   const cardClass = `${selectable ? 'cursor-pointer' : ''} ${
     selected ? 'ring-2 ring-yellow-500 bg-yellow-500 bg-opacity-10' : ''
   }`;
@@ -59,11 +49,9 @@ export const PerformerCard: React.FC<PerformerCardProps> = ({
               </div>
             )}
             
-            <div className="flex items-center space-x-2 mt-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                getExperienceBadgeColor(performer.experienceLevel)
-              }`}>
-                {performer.experienceLevel}
+            <div className="mt-2">
+              <span className="text-gray-400 text-xs">
+                Added {new Date(performer.createdAt).toLocaleDateString()}
               </span>
             </div>
           </div>

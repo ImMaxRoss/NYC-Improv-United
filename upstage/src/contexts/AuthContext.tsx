@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { authAPI } from '../api/modules/auth';
 import { User } from '../types';
 
-
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -13,12 +12,14 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-
 interface RegisterData {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  bio?: string;
+  experience?: string;
+  certifications?: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -114,14 +115,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('Attempting registration...');
       const response = await authAPI.register(userData);
-      console.log('Registration response:', response);
+      console.log('Registration response:', {
+        ...response,
+        token: response.token ? '[RECEIVED]' : '[MISSING]'
+      });
       
-      // After successful registration, automatically log the user in
-      const loginResult = await login(userData.email, userData.password);
-      if (loginResult.success) {
+      // After successful registration, fetch the user profile
+      try {
+        console.log('Fetching profile after registration...');
+        const profile = await authAPI.getProfile();
+        console.log('Profile response after registration:', profile);
+        setUser(profile);
         return { success: true };
-      } else {
-        return { success: true, error: 'Registration successful! Please log in.' };
+      } catch (profileError) {
+        console.error('Profile fetch failed after registration:', profileError);
+        
+        // If profile fetch fails but registration succeeded, create user from registration data
+        if (response.token) {
+          console.warn('Using registration data for user profile due to profile fetch error');
+          const newUser: User = {
+            id: response.coachId || Date.now(), // Use coachId from response or fallback
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            email: userData.email,
+            lessons: [],
+            lessonTemplates: []
+          };
+          setUser(newUser);
+          return { success: true };
+        }
+        
+        throw profileError;
       }
     } catch (err) {
       console.error('Registration error:', err);
@@ -135,7 +159,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      register, 
+      logout, 
+      isAuthenticated: !!user 
+    }}>
       {children}
     </AuthContext.Provider>
   );

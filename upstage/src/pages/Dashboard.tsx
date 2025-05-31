@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add useNavigate
-import { Calendar, Clock, Users, BookOpen, Star, Play, Plus, ChevronRight, Sparkles, BarChart3, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, Users, BookOpen, Star, Play, Plus, ChevronRight, Sparkles, BarChart3, TrendingUp } from 'lucide-react'; // REMOVED: Copy icon
 import { useAuth } from '../contexts/AuthContext';
 import { lessonsAPI } from '../api/modules/lessons';
 import { exercisesAPI } from '../api/modules/exercises';
@@ -11,6 +11,7 @@ import { Navigation } from '../components/Navigation';
 import { StatCard } from '../components/StatCard';
 import { UpcomingLesson } from '../components/UpcomingLesson';
 import { ExerciseCard } from '../components/ExerciseCard';
+import { ApiHealthCheck } from '../components/ApiHealthCheck';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -18,7 +19,7 @@ import { LessonPlanner } from './LessonPlanner';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate(); // Add navigation hook
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'dashboard' | 'planner'>('dashboard');
   
   const { data: upcomingLessons, loading: lessonsLoading } = useApi(() => lessonsAPI.getUpcoming());
@@ -30,15 +31,15 @@ export const Dashboard: React.FC = () => {
   const { data: performerProgress } = useApi(() => analyticsAPI.getPerformerProgress({ timeRange: '30d' }));
 
   const handleStartPractice = (lessonId: number) => {
-    navigate(`/live-practice/${lessonId}`); // Use navigate instead of window.location.href
+    navigate(`/live-practice/${lessonId}`);
   };
 
   const handleNavigateToAnalytics = () => {
-    navigate('/analytics'); // Use navigate instead of window.location.href
+    navigate('/analytics');
   };
 
   const handleNavigateToExercises = () => {
-    navigate('/exercises'); // Use navigate instead of window.location.href
+    navigate('/exercises');
   };
 
   if (activeView === 'planner') {
@@ -71,6 +72,9 @@ export const Dashboard: React.FC = () => {
       <Navigation />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* API Health Check */}
+        <ApiHealthCheck />
+        
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-gray-100">
@@ -128,7 +132,7 @@ export const Dashboard: React.FC = () => {
           <Card 
             hoverable 
             className="p-6 cursor-pointer"
-            onClick={handleNavigateToAnalytics} // Use navigate function
+            onClick={handleNavigateToAnalytics}
           >
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-blue-500 bg-opacity-20 rounded-lg">
@@ -163,7 +167,7 @@ export const Dashboard: React.FC = () => {
           <Card 
             hoverable 
             className="p-6 cursor-pointer"
-            onClick={handleNavigateToExercises} // Use navigate function
+            onClick={handleNavigateToExercises}
           >
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-purple-500 bg-opacity-20 rounded-lg">
@@ -177,16 +181,16 @@ export const Dashboard: React.FC = () => {
           </Card>
         </div>
 
-        {/* Main Content Grid */}
+        {/* Main Content Grid - Updated to remove templates section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Upcoming Lessons */}
-          <Card className="p-6">
+          <Card className="p-6 lg:col-span-1">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-display font-bold text-gray-100">Upcoming Lessons</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => navigate('/lessons')} // Add navigation to lessons page
+                onClick={() => navigate('/lessons')}
               >
                 View All
               </Button>
@@ -227,13 +231,13 @@ export const Dashboard: React.FC = () => {
           </Card>
 
           {/* Popular Exercises */}
-          <Card className="p-6">
+          <Card className="p-6 lg:col-span-1">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-display font-bold text-gray-100">Popular Exercises</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={handleNavigateToExercises} // Use navigate function
+                onClick={handleNavigateToExercises}
               >
                 Browse All
               </Button>
@@ -250,13 +254,13 @@ export const Dashboard: React.FC = () => {
           </Card>
 
           {/* Analytics Preview */}
-          <Card className="p-6">
+          <Card className="p-6 lg:col-span-1">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-display font-bold text-gray-100">Quick Insights</h2>
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={handleNavigateToAnalytics} // Use navigate function
+                onClick={handleNavigateToAnalytics}
               >
                 View Analytics
               </Button>

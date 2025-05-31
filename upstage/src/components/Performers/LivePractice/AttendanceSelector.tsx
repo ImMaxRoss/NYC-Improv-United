@@ -50,11 +50,6 @@ export const AttendanceSelector: React.FC<AttendanceSelectorProps> = ({
                 </span>
                 {isSelected && <Check className="h-4 w-4" />}
               </div>
-              {performer.experienceLevel && (
-                <div className="text-xs text-gray-400 mt-1">
-                  {performer.experienceLevel}
-                </div>
-              )}
             </button>
           );
         })}

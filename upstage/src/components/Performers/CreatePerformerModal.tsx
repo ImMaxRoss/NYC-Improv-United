@@ -20,7 +20,6 @@ export const CreatePerformerModal: React.FC<CreatePerformerModalProps> = ({
     firstName: '',
     lastName: '',
     email: '',
-    experienceLevel: 'Beginner',
     notes: ''
   });
 
@@ -58,7 +57,6 @@ export const CreatePerformerModal: React.FC<CreatePerformerModalProps> = ({
         firstName: '',
         lastName: '',
         email: '',
-        experienceLevel: 'Beginner',
         notes: ''
       });
       setErrors({});
@@ -149,22 +147,6 @@ export const CreatePerformerModal: React.FC<CreatePerformerModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Experience Level
-            </label>
-            <select
-              value={formData.experienceLevel}
-              onChange={(e) => handleChange('experienceLevel', e.target.value as any)}
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:border-yellow-500"
-            >
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-              <option value="Professional">Professional</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
               Notes (Optional)
             </label>
             <textarea
@@ -173,6 +155,12 @@ export const CreatePerformerModal: React.FC<CreatePerformerModalProps> = ({
               placeholder="Any notes about this performer's strengths, areas to work on, etc."
               className="w-full h-20 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:border-yellow-500"
             />
+          </div>
+
+          <div className="bg-blue-500 bg-opacity-10 border border-blue-500 border-opacity-30 rounded-lg p-3">
+            <p className="text-blue-200 text-sm">
+              <strong>Tip:</strong> Use the notes field to track performer progress, strengths, and areas for improvement over time.
+            </p>
           </div>
         </div>
 
